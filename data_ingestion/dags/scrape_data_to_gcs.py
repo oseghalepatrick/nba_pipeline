@@ -93,7 +93,7 @@ def once_scrape_parquetize_upload_dag(
             bash_command=f"rm {local_csv_path_template} {local_parquet_path_template}"
         )
 
-        download_dataset_task >> format_to_parquet_task >> local_to_gcs_task >> rm_task
+        scrape_dataset_task >> format_to_parquet_task >> local_to_gcs_task >> rm_task
 
 def scrape_games_parquetize_upload_dag(
     dag,
@@ -132,7 +132,7 @@ def scrape_games_parquetize_upload_dag(
             },
         )
 
-        download_dataset_task >> format_to_parquet_task >> local_to_gcs_task
+        scrape_dataset_task >> format_to_parquet_task >> local_to_gcs_task
 
 def scrape_games_details_parquetize_upload_dag(
     dag,
@@ -176,7 +176,7 @@ def scrape_games_details_parquetize_upload_dag(
             bash_command=f"rm {local_csv_path_template} {local_parquet_path_template}"
         )
 
-        download_dataset_task >> format_to_parquet_task >> local_to_gcs_task >> rm_task
+        scrape_dataset_task >> format_to_parquet_task >> local_to_gcs_task >> rm_task
 
 def rm_data_dag(
     dag,
@@ -189,3 +189,152 @@ def rm_data_dag(
         )
 
         rm_task
+
+
+PLAYER_INFO_CSV_FILE_TEMPLATE = AIRFLOW_HOME + '/players_info.csv'
+PLAYER_INFO_PARQUET_FILE_TEMPLATE = AIRFLOW_HOME + '/players_info.parquet'
+PLAYER_INFO_GCS_PATH_TEMPLATE = "raw/playersInfo/players_info.parquet"
+
+
+scrape_players_info_data_dag = DAG(
+    dag_id="scrape_player_info_data",
+    schedule_interval="@once",
+    start_date=days_ago(1),
+    default_args=default_args,
+    catchup=True,
+    max_active_runs=3,
+    tags=['scrape-nba'],
+)
+
+once_scrape_parquetize_upload_dag(
+    dag=scrape_players_info_data_dag,
+    scrape_function=scrapePlayersInfo,
+    local_csv_path_template=PLAYER_INFO_CSV_FILE_TEMPLATE,
+    local_parquet_path_template=PLAYER_INFO_PARQUET_FILE_TEMPLATE,
+    gcs_path_template=PLAYER_INFO_GCS_PATH_TEMPLATE
+)
+
+PLAYER_SALARY_CSV_FILE_TEMPLATE = AIRFLOW_HOME + '/players_salary.csv'
+PLAYER_SALARY_PARQUET_FILE_TEMPLATE = AIRFLOW_HOME + '/players_salary.parquet'
+PLAYER_SALARY_GCS_PATH_TEMPLATE = "raw/playersSalary/players_salary.parquet"
+
+
+scrape_players_salary_data_dag = DAG(
+    dag_id="scrape_players_salary_data",
+    schedule_interval="@once",
+    start_date=days_ago(1),
+    default_args=default_args,
+    catchup=True,
+    max_active_runs=3,
+    tags=['scrape-nba'],
+)
+
+once_scrape_parquetize_upload_dag(
+    dag=scrape_players_salary_data_dag,
+    scrape_function=scrapeSalary,
+    local_csv_path_template=PLAYER_SALARY_CSV_FILE_TEMPLATE,
+    local_parquet_path_template=PLAYER_SALARY_PARQUET_FILE_TEMPLATE,
+    gcs_path_template=PLAYER_SALARY_GCS_PATH_TEMPLATE
+)
+
+COACHES_CSV_FILE_TEMPLATE = AIRFLOW_HOME + '/coaches.csv'
+COACHES_PARQUET_FILE_TEMPLATE = AIRFLOW_HOME + '/coaches.parquet'
+COACHES_GCS_PATH_TEMPLATE = "raw/coaches/coaches.parquet"
+
+
+scrape_coaches_data_dag = DAG(
+    dag_id="scrape_coaches_data",
+    schedule_interval="@once",
+    start_date=days_ago(1),
+    default_args=default_args,
+    catchup=True,
+    max_active_runs=3,
+    tags=['scrape-nba'],
+)
+
+once_scrape_parquetize_upload_dag(
+    dag=scrape_coaches_data_dag,
+    scrape_function=scrapeCoaches,
+    local_csv_path_template=COACHES_CSV_FILE_TEMPLATE,
+    local_parquet_path_template=COACHES_PARQUET_FILE_TEMPLATE,
+    gcs_path_template=COACHES_GCS_PATH_TEMPLATE
+)
+
+year = "{{ execution_date.strftime('%Y') }}.csv"
+GAMES_CSV_FILE_TEMPLATE = AIRFLOW_HOME + f"/{{ execution_date.add(year=-1).year }}-{year}_season_games.csv"
+GAMES_PARQUET_FILE_TEMPLATE = AIRFLOW_HOME + f"/{{ execution_date.add(year=-1).year }}-{year}_season_games.parquet"
+GAME_GCS_PATH_TEMPLATE = f"raw/games/{{ execution_date.add(year=-1).year }}-{year}_season_games.parquet"
+
+scrape_games_data_dag = DAG(
+    dag_id="scrape_games_data",
+    schedule_interval="@yearly",
+    start_date=datetime(1997, 1, 1),
+    end_date=datetime(2023, 1, 1),
+    default_args=default_args,
+    catchup=True,
+    max_active_runs=3,
+    tags=['scrape-nba'],
+)
+
+scrape_games_parquetize_upload_dag(
+    dag=scrape_games_data_dag,
+    scrape_function=scrapeGames,
+    scrape_yr=year,
+    local_csv_path_template=GAMES_CSV_FILE_TEMPLATE,
+    local_parquet_path_template=GAMES_PARQUET_FILE_TEMPLATE,
+    gcs_path_template=GAME_GCS_PATH_TEMPLATE
+)
+
+year = "{{ execution_date.strftime('%Y') }}.csv"
+prev = int(year) -1
+GAMES_CSV_FILE_TEMPLATE_FOR_PLAY = AIRFLOW_HOME + f"/{{ execution_date.add(year=-1).year }}-{year}_season_games.csv"
+PLAYBYPLAY_CSV_FILE_TEMPLAT = AIRFLOW_HOME + f"/{{ execution_date.add(year=-1).year }}-{year}_season_games_playbyplay.csv"
+PLAYBYPLAY_PARQUET_FILE_TEMPLATE = AIRFLOW_HOME + f"/{{ execution_date.add(year=-1).year }}-{year}_season_games_playbyplay.parquet"
+PLAYBYPLAY_GCS_PATH_TEMPLATE = f"raw/playbyplay/{{ execution_date.add(year=-1).year }}-{year}_season_games_playbyplay.parquet"
+
+scrape_playbyplay_data_dag = DAG(
+    dag_id="scrape_playbyplay_data",
+    schedule_interval="@yearly",
+    start_date=datetime(1997, 1, 1),
+    end_date=datetime(2023, 1, 1),
+    default_args=default_args,
+    catchup=True,
+    max_active_runs=3,
+    tags=['scrape-nba'],
+)
+
+scrape_playbyplay_parquetize_upload_dag(
+    dag=scrape_playbyplay_data_dag,
+    scrape_function=scrapePlayByPlay,
+    src_dir=GAMES_CSV_FILE_TEMPLATE_FOR_PLAY,
+    local_csv_path_template=PLAYBYPLAY_CSV_FILE_TEMPLAT,
+    local_parquet_path_template=PLAYBYPLAY_PARQUET_FILE_TEMPLATE,
+    gcs_path_template=PLAYBYPLAY_GCS_PATH_TEMPLATE
+)
+
+year = "{{ execution_date.strftime('%Y') }}.csv"
+prev = int(year) -1
+GAMES_CSV_FILE_TEMPLATE_FOR_BOXSCORES = AIRFLOW_HOME + f"/{{ execution_date.add(year=-1).year }}-{year}_season_games.csv"
+BOXSCORES_CSV_FILE_TEMPLAT = AIRFLOW_HOME + f"/{{ execution_date.add(year=-1).year }}-{year}_season_games_boxscores.csv"
+BOXSCORES_PARQUET_FILE_TEMPLATE = AIRFLOW_HOME + f"/{{ execution_date.add(year=-1).year }}-{year}_season_games_boxscores.parquet"
+BOXSCORES_GCS_PATH_TEMPLATE = f"raw/boxscores/{{ execution_date.add(year=-1).year }}-{year}_season_games_boxscores.parquet"
+
+scrape_boxscores_data_dag = DAG(
+    dag_id="scrape_boxscores_data",
+    schedule_interval="@yearly",
+    start_date=datetime(1997, 1, 1),
+    end_date=datetime(2023, 1, 1),
+    default_args=default_args,
+    catchup=True,
+    max_active_runs=3,
+    tags=['scrape-nba'],
+)
+
+scrape_boxscores_parquetize_upload_dag(
+    dag=scrape_boxscores_data_dag,
+    scrape_function=scrapeBoxScores,
+    src_dir=GAMES_CSV_FILE_TEMPLATE_FOR_BOXSCORES,
+    local_csv_path_template=BOXSCORES_CSV_FILE_TEMPLAT,
+    local_parquet_path_template=BOXSCORES_PARQUET_FILE_TEMPLATE,
+    gcs_path_template=BOXSCORES_GCS_PATH_TEMPLATE
+)
