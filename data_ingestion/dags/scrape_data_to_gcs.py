@@ -260,7 +260,7 @@ once_scrape_parquetize_upload_dag(
     gcs_path_template=COACHES_GCS_PATH_TEMPLATE
 )
 
-year = "{{ execution_date.strftime('%Y') }}.csv"
+year = "{{ execution_date.strftime('%Y') }}"
 GAMES_CSV_FILE_TEMPLATE = AIRFLOW_HOME + f"/{{ execution_date.add(year=-1).year }}-{year}_season_games.csv"
 GAMES_PARQUET_FILE_TEMPLATE = AIRFLOW_HOME + f"/{{ execution_date.add(year=-1).year }}-{year}_season_games.parquet"
 GAME_GCS_PATH_TEMPLATE = f"raw/games/{{ execution_date.add(year=-1).year }}-{year}_season_games.parquet"
@@ -285,7 +285,7 @@ scrape_games_parquetize_upload_dag(
     gcs_path_template=GAME_GCS_PATH_TEMPLATE
 )
 
-year = "{{ execution_date.strftime('%Y') }}.csv"
+year = "{{ execution_date.strftime('%Y') }}"
 prev = int(year) -1
 GAMES_CSV_FILE_TEMPLATE_FOR_PLAY = AIRFLOW_HOME + f"/{{ execution_date.add(year=-1).year }}-{year}_season_games.csv"
 PLAYBYPLAY_CSV_FILE_TEMPLAT = AIRFLOW_HOME + f"/{{ execution_date.add(year=-1).year }}-{year}_season_games_playbyplay.csv"
@@ -312,7 +312,7 @@ scrape_playbyplay_parquetize_upload_dag(
     gcs_path_template=PLAYBYPLAY_GCS_PATH_TEMPLATE
 )
 
-year = "{{ execution_date.strftime('%Y') }}.csv"
+year = "{{ execution_date.strftime('%Y') }}"
 prev = int(year) -1
 GAMES_CSV_FILE_TEMPLATE_FOR_BOXSCORES = AIRFLOW_HOME + f"/{{ execution_date.add(year=-1).year }}-{year}_season_games.csv"
 BOXSCORES_CSV_FILE_TEMPLAT = AIRFLOW_HOME + f"/{{ execution_date.add(year=-1).year }}-{year}_season_games_boxscores.csv"
